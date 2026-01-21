@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Server, ApiResponse } from '@/types';
 import { apiGet, apiPost, apiDelete } from '../utils/fetchInterceptor';
 import { useAuth } from './AuthContext';
+import { getSessionNumber, setSessionNumber } from '../utils/sessionStorage';
 
 // Configuration options
 const CONFIG = {
@@ -64,7 +65,9 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [fetchAttempts, setFetchAttempts] = useState(0);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [serversPerPage, setServersPerPage] = useState(5);
+  const [serversPerPage, setServersPerPage] = useState(() =>
+    getSessionNumber('servers.serversPerPage', 5),
+  );
 
   // Timer reference for polling
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -458,6 +461,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Handle servers per page change
   const handleServersPerPageChange = useCallback((limit: number) => {
+    setSessionNumber('servers.serversPerPage', limit);
     setServersPerPage(limit);
     setCurrentPage(1); // Reset to first page when changing page size
   }, []);

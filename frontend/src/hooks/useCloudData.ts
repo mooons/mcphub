@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CloudServer, ApiResponse, CloudServerTool } from '@/types';
 import { apiGet, apiPost } from '../utils/fetchInterceptor';
+import { getSessionNumber, setSessionNumber } from '../utils/sessionStorage';
 
 export const useCloudData = () => {
   const { t } = useTranslation();
@@ -18,7 +19,9 @@ export const useCloudData = () => {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [serversPerPage, setServersPerPage] = useState(9);
+  const [serversPerPage, setServersPerPage] = useState(() =>
+    getSessionNumber('market.cloud.serversPerPage', 9),
+  );
   const [totalPages, setTotalPages] = useState(1);
 
   // Fetch all cloud market servers
@@ -311,6 +314,7 @@ export const useCloudData = () => {
   // Change servers per page
   const changeServersPerPage = useCallback(
     (perPage: number) => {
+      setSessionNumber('market.cloud.serversPerPage', perPage);
       setServersPerPage(perPage);
       setCurrentPage(1);
       applyPagination(allServers, 1, perPage);
