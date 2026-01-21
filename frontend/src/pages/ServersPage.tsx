@@ -208,10 +208,6 @@ const ServersPage: React.FC = () => {
             <p className="text-gray-600">{t('app.loading')}</p>
           </div>
         </div>
-      ) : filteredServers.length === 0 ? (
-        <div className="bg-white shadow rounded-lg p-6 empty-state">
-          <p className="text-gray-600">{t('app.noServers')}</p>
-        </div>
       ) : (
         <>
           <div className="mb-4 flex items-center space-x-4">
@@ -259,65 +255,75 @@ const ServersPage: React.FC = () => {
               <span>{t('server.statusConnecting')}</span>
             </label>
           </div>
-          <div className="space-y-6">
-            {paginatedFilteredServers.map((server, index) => (
-              <ServerCard
-                key={index}
-                server={server}
-                onRemove={handleServerRemove}
-                onEdit={handleEditClick}
-                onToggle={handleServerToggle}
-                onRefresh={triggerRefresh}
-                onReload={handleServerReload}
-              />
-            ))}
-          </div>
+          {filteredServers.length === 0 ? (
+            <div className="bg-white shadow rounded-lg p-6 empty-state">
+              <p className="text-gray-600">{t('app.noServers')}</p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-6">
+                {paginatedFilteredServers.map((server, index) => (
+                  <ServerCard
+                    key={index}
+                    server={server}
+                    onRemove={handleServerRemove}
+                    onEdit={handleEditClick}
+                    onToggle={handleServerToggle}
+                    onRefresh={triggerRefresh}
+                    onReload={handleServerReload}
+                  />
+                ))}
+              </div>
 
-          <div className="flex items-center mb-4">
-            <div className="flex-[2] text-sm text-gray-500">
-              {pagination && isAllStatusSelected ? (
-                t('common.showing', {
-                  start: (pagination.page - 1) * pagination.limit + 1,
-                  end: Math.min(pagination.page * pagination.limit, pagination.total),
-                  total: pagination.total
-                })
-              ) : (
-                t('common.showing', {
-                  start:
-                    filteredServers.length === 0 ? 0 : (currentPage - 1) * serversPerPage + 1,
-                  end: Math.min(currentPage * serversPerPage, filteredServers.length),
-                  total: filteredServers.length
-                })
-              )}
-            </div>
-            <div className="flex-[4] flex justify-center">
-              {filteredTotalPages > 1 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={filteredTotalPages}
-                  onPageChange={setCurrentPage}
-                  disabled={isLoading}
-                />
-              )}
-            </div>
-            <div className="flex-[2] flex items-center justify-end space-x-2">
-              <label htmlFor="perPage" className="text-sm text-gray-600">
-                {t('common.itemsPerPage')}:
-              </label>
-              <select
-                id="perPage"
-                value={serversPerPage}
-                onChange={(e) => setServersPerPage(Number(e.target.value))}
-                disabled={isLoading}
-                className="border rounded p-1 text-sm btn-secondary outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-          </div>
+              <div className="flex items-center mb-4">
+                <div className="flex-[2] text-sm text-gray-500">
+                  {pagination && isAllStatusSelected ? (
+                    t('common.showing', {
+                      start: (pagination.page - 1) * pagination.limit + 1,
+                      end: Math.min(pagination.page * pagination.limit, pagination.total),
+                      total: pagination.total
+                    })
+                  ) : (
+                    t('common.showing', {
+                      start:
+                        filteredServers.length === 0
+                          ? 0
+                          : (currentPage - 1) * serversPerPage + 1,
+                      end: Math.min(currentPage * serversPerPage, filteredServers.length),
+                      total: filteredServers.length
+                    })
+                  )}
+                </div>
+                <div className="flex-[4] flex justify-center">
+                  {filteredTotalPages > 1 && (
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={filteredTotalPages}
+                      onPageChange={setCurrentPage}
+                      disabled={isLoading}
+                    />
+                  )}
+                </div>
+                <div className="flex-[2] flex items-center justify-end space-x-2">
+                  <label htmlFor="perPage" className="text-sm text-gray-600">
+                    {t('common.itemsPerPage')}:
+                  </label>
+                  <select
+                    id="perPage"
+                    value={serversPerPage}
+                    onChange={(e) => setServersPerPage(Number(e.target.value))}
+                    disabled={isLoading}
+                    className="border rounded p-1 text-sm btn-secondary outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
 
