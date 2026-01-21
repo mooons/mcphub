@@ -1,9 +1,9 @@
-export const getSessionNumber = (key: string, fallback: number): number => {
+export const getLocalNumber = (key: string, fallback: number): number => {
   if (typeof window === 'undefined') {
     return fallback;
   }
 
-  const stored = window.sessionStorage.getItem(key);
+  const stored = window.localStorage.getItem(key);
   if (!stored) {
     return fallback;
   }
@@ -12,7 +12,7 @@ export const getSessionNumber = (key: string, fallback: number): number => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-export const setSessionNumber = (key: string, value: number): void => {
+export const setLocalNumber = (key: string, value: number): void => {
   if (typeof window === 'undefined') {
     return;
   }
@@ -21,5 +21,5 @@ export const setSessionNumber = (key: string, value: number): void => {
     return;
   }
 
-  window.sessionStorage.setItem(key, String(value));
+  window.localStorage.setItem(key, String(value));
 };

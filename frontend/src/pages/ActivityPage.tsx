@@ -15,7 +15,7 @@ import {
   deleteOldActivities,
 } from '@/services/activityService';
 import Pagination from '@/components/ui/Pagination';
-import { getSessionNumber, setSessionNumber } from '@/utils/sessionStorage';
+import { getLocalNumber, setLocalNumber } from '@/utils/localStorage';
 
 // Pagination info type
 interface PaginationInfo {
@@ -42,7 +42,7 @@ const ActivityPage: React.FC = () => {
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(() =>
-    getSessionNumber('activity.itemsPerPage', 10),
+    getLocalNumber('activity.itemsPerPage', 10),
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -821,7 +821,7 @@ const ActivityPage: React.FC = () => {
                 value={itemsPerPage}
                 onChange={(e) => {
                   const nextValue = Number(e.target.value);
-                  setSessionNumber('activity.itemsPerPage', nextValue);
+                  setLocalNumber('activity.itemsPerPage', nextValue);
                   setItemsPerPage(nextValue);
                   setCurrentPage(1);
                 }}

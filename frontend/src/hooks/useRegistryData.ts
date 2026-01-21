@@ -7,7 +7,7 @@ import {
   RegistryServerVersionsResponse,
 } from '@/types';
 import { apiGet } from '../utils/fetchInterceptor';
-import { getSessionNumber, setSessionNumber } from '../utils/sessionStorage';
+import { getLocalNumber, setLocalNumber } from '../utils/localStorage';
 
 export const useRegistryData = () => {
   const { t } = useTranslation();
@@ -20,7 +20,7 @@ export const useRegistryData = () => {
   // Cursor-based pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [serversPerPage, setServersPerPage] = useState(() =>
-    getSessionNumber('market.registry.serversPerPage', 9),
+    getLocalNumber('market.registry.serversPerPage', 9),
   );
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -127,7 +127,7 @@ export const useRegistryData = () => {
   // Change items per page
   const changeServersPerPage = useCallback(
     async (newServersPerPage: number) => {
-      setSessionNumber('market.registry.serversPerPage', newServersPerPage);
+      setLocalNumber('market.registry.serversPerPage', newServersPerPage);
       setServersPerPage(newServersPerPage);
       setCurrentPage(1);
       setCursorHistory([]);

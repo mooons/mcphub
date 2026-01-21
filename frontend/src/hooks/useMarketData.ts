@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MarketServer, ApiResponse, ServerConfig } from '@/types';
 import { apiGet, apiPost } from '../utils/fetchInterceptor';
-import { getSessionNumber, setSessionNumber } from '../utils/sessionStorage';
+import { getLocalNumber, setLocalNumber } from '../utils/localStorage';
 
 export const useMarketData = () => {
   const { t } = useTranslation();
@@ -21,7 +21,7 @@ export const useMarketData = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [serversPerPage, setServersPerPage] = useState(() =>
-    getSessionNumber('market.local.serversPerPage', 9),
+    getLocalNumber('market.local.serversPerPage', 9),
   );
   const [totalPages, setTotalPages] = useState(1);
 
@@ -315,7 +315,7 @@ export const useMarketData = () => {
   // Change servers per page
   const changeServersPerPage = useCallback(
     (perPage: number) => {
-      setSessionNumber('market.local.serversPerPage', perPage);
+      setLocalNumber('market.local.serversPerPage', perPage);
       setServersPerPage(perPage);
       setCurrentPage(1);
       applyPagination(allServers, 1, perPage);
