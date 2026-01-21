@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Server } from '@/types';
@@ -9,12 +9,14 @@ import { useServerData } from '@/hooks/useServerData';
 import DxtUploadForm from '@/components/DxtUploadForm';
 import JSONImportForm from '@/components/JSONImportForm';
 import Pagination from '@/components/ui/Pagination';
+import { getLocalJson, setLocalJson } from '@/utils/localStorage';
 
 const ServersPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const {
     servers,
+    allServers,
     error,
     setError,
     isLoading,
@@ -34,6 +36,60 @@ const ServersPage: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showDxtUpload, setShowDxtUpload] = useState(false);
   const [showJsonImport, setShowJsonImport] = useState(false);
+  const [statusFilters, setStatusFilters] = useState(() =>
+    getLocalJson('servers.statusFilters', {
+      online: true,
+      offline: true,
+      connecting: true,
+    }),
+  );
+
+  const isAllStatusSelected = useMemo(
+    () => statusFilters.online && statusFilters.offline && statusFilters.connecting,
+    [statusFilters],
+  );
+
+  const filteredServers = useMemo(() => {
+    const sourceServers = isAllStatusSelected ? servers : allServers;
+    return sourceServers.filter((server) => {
+      if (server.status === 'connected') {
+        return statusFilters.online;
+      }
+      if (server.status === 'connecting') {
+        return statusFilters.connecting;
+      }
+      if (server.status === 'disconnected' || server.status === 'oauth_required') {
+        return statusFilters.offline;
+      }
+      return true;
+    });
+  }, [allServers, servers, isAllStatusSelected, statusFilters]);
+
+  const filteredTotalPages = useMemo(() => {
+    if (isAllStatusSelected) {
+      return pagination?.totalPages ?? 1;
+    }
+    return Math.max(1, Math.ceil(filteredServers.length / serversPerPage));
+  }, [filteredServers.length, isAllStatusSelected, pagination, serversPerPage]);
+
+  const paginatedFilteredServers = useMemo(() => {
+    if (isAllStatusSelected) {
+      return filteredServers;
+    }
+    const startIndex = (currentPage - 1) * serversPerPage;
+    return filteredServers.slice(startIndex, startIndex + serversPerPage);
+  }, [currentPage, filteredServers, isAllStatusSelected, serversPerPage]);
+
+  useEffect(() => {
+    if (!isAllStatusSelected && currentPage > filteredTotalPages) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, filteredTotalPages, isAllStatusSelected, setCurrentPage]);
+
+  const updateStatusFilters = (nextFilters: typeof statusFilters) => {
+    setStatusFilters(nextFilters);
+    setLocalJson('servers.statusFilters', nextFilters);
+  };
 
   const handleEditClick = async (server: Server) => {
     const fullServerData = await handleServerEdit(server);
@@ -152,14 +208,59 @@ const ServersPage: React.FC = () => {
             <p className="text-gray-600">{t('app.loading')}</p>
           </div>
         </div>
-      ) : servers.length === 0 ? (
+      ) : filteredServers.length === 0 ? (
         <div className="bg-white shadow rounded-lg p-6 empty-state">
           <p className="text-gray-600">{t('app.noServers')}</p>
         </div>
       ) : (
         <>
+          <div className="mb-4 flex items-center space-x-4">
+            <span className="text-sm text-gray-600">{t('server.status')}:</span>
+            <label className="flex items-center space-x-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={statusFilters.online}
+                onChange={(e) =>
+                  updateStatusFilters({
+                    ...statusFilters,
+                    online: e.target.checked,
+                  })
+                }
+                className="h-4 w-4 rounded border-gray-300 text-blue-600"
+              />
+              <span>{t('server.statusOnline')}</span>
+            </label>
+            <label className="flex items-center space-x-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={statusFilters.offline}
+                onChange={(e) =>
+                  updateStatusFilters({
+                    ...statusFilters,
+                    offline: e.target.checked,
+                  })
+                }
+                className="h-4 w-4 rounded border-gray-300 text-blue-600"
+              />
+              <span>{t('server.statusOffline')}</span>
+            </label>
+            <label className="flex items-center space-x-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={statusFilters.connecting}
+                onChange={(e) =>
+                  updateStatusFilters({
+                    ...statusFilters,
+                    connecting: e.target.checked,
+                  })
+                }
+                className="h-4 w-4 rounded border-gray-300 text-blue-600"
+              />
+              <span>{t('server.statusConnecting')}</span>
+            </label>
+          </div>
           <div className="space-y-6">
-            {servers.map((server, index) => (
+            {paginatedFilteredServers.map((server, index) => (
               <ServerCard
                 key={index}
                 server={server}
@@ -174,7 +275,7 @@ const ServersPage: React.FC = () => {
 
           <div className="flex items-center mb-4">
             <div className="flex-[2] text-sm text-gray-500">
-              {pagination ? (
+              {pagination && isAllStatusSelected ? (
                 t('common.showing', {
                   start: (pagination.page - 1) * pagination.limit + 1,
                   end: Math.min(pagination.page * pagination.limit, pagination.total),
@@ -182,17 +283,18 @@ const ServersPage: React.FC = () => {
                 })
               ) : (
                 t('common.showing', {
-                  start: 1,
-                  end: servers.length,
-                  total: servers.length
+                  start:
+                    filteredServers.length === 0 ? 0 : (currentPage - 1) * serversPerPage + 1,
+                  end: Math.min(currentPage * serversPerPage, filteredServers.length),
+                  total: filteredServers.length
                 })
               )}
             </div>
             <div className="flex-[4] flex justify-center">
-              {pagination && pagination.totalPages > 1 && (
+              {filteredTotalPages > 1 && (
                 <Pagination
                   currentPage={currentPage}
-                  totalPages={pagination.totalPages}
+                  totalPages={filteredTotalPages}
                   onPageChange={setCurrentPage}
                   disabled={isLoading}
                 />
